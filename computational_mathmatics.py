@@ -6,9 +6,10 @@ def remove_none(list):
 
 
 class Graph:
-    def __init__(self, start_nodes, end_node):
-        assert(type(start_nodes) == "list")
-        self.start_nodes = start_nodes
+    # maybe only have end node and find start nodes from that
+    def __init__(self, end_node):
+        # assert(type(start_nodes) == "list")
+        self.start_nodes = []
         self.end_node = end_node
         print("initialized graph")
 
@@ -16,10 +17,11 @@ class Graph:
         ind = 0
         for node in self.start_nodes:
             val, next_node = node.forward(values[ind])
+            # do this recursively i think
             ind += 1
             # finish this once I'm done node class
 
-    def id(self):
+    def initialize(self):
         self.end_node.catalog(-1)
         next_nodes = self.end_node.last_nodes
         ind = 0
@@ -29,6 +31,8 @@ class Graph:
             for nodes in next_nodes:
                 nodes.catalog(ind)
                 temp_next.append(nodes.last_nodes)
+                if not nodes.last_nodes:
+                    self.start_nodes.append(nodes)
             next_nodes = remove_none(temp_next)
             ind += 1
             if len(next_nodes) == 0:
@@ -46,12 +50,18 @@ class Node:
         self.operation = operation
         self.next_node = next_node
         self.last_nodes = last_node
-        self.stored_var = 0.0
-        self.id = 0
+        self.stored_val = 0.0
+        self.id = -99
+
+    def connect(self, nodes):
+        self.last_nodes = nodes
+        for node in nodes:
+            node.next_node = self
 
     def forward(self, vars):
-        assert (type(vars) == "list")
-        assert(len(vars) == self.variables)
+        # assert (type(vars) == "list")
+        # assert(len(vars) == self.variables)
+        self.stored_val = self.operation(vars)
         return self.operation(vars), self.next_node
 
     def node_def(self):
@@ -65,5 +75,19 @@ def assign(val):
     return val
 
 
-node = Node(1, assign)
-node.node_def()
+def add(vals):
+    for i in vals:
+        sum += i
+    return sum
+
+
+node1 = Node(1, assign)
+node1.node_def()
+node1.forward(7)
+node2 = Node(1, assign)
+node2.forward(7)
+adder = Node(2, add)
+adder.connect([node1, node2])
+graph = Graph(adder)
+graph.initialize()
+print(graph.start_nodes)
