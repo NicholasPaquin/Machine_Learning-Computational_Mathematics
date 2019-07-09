@@ -1,4 +1,5 @@
 import copy
+import uuid
 
 
 def remove_none(list):
@@ -10,16 +11,30 @@ class Graph:
     def __init__(self, end_node):
         # assert(type(start_nodes) == "list")
         self.start_nodes = []
+        self.start_id = -1
         self.end_node = end_node
         print("initialized graph")
 
+    # might get rid of forward step in favour of recursion experimenting a bit I suppose
     def forward(self, values):
         ind = 0
-        for node in self.start_nodes:
-            val, next_node = node.forward(values[ind])
-            # do this recursively i think
+        c_level = self.start_id
+        que = self.start_nodes
+        for node in que:
+            if node.id == c_level:
+                val, next_node = node.forward(values[ind])
+                que.remove(node)
+                if next_node not in que:
+                    que.append(next_node)
             ind += 1
             # finish this once I'm done node class
+
+    def value_dict(self, values):
+        assert(len(values) == len(self.start_nodes))
+        dict = {}
+        for i in range(len(values)):
+            dict[self.start_nodes[i].uuid] = values[i]
+        return dict
 
     def initialize(self):
         self.end_node.catalog(-1)
@@ -34,9 +49,11 @@ class Graph:
                 if not nodes.last_nodes:
                     self.start_nodes.append(nodes)
             next_nodes = remove_none(temp_next)
-            ind += 1
+
             if len(next_nodes) == 0:
+                self.start_id = ind
                 cataloged = True
+            ind += 1
         print("Indexed nodes")
 
 
@@ -52,6 +69,10 @@ class Node:
         self.last_nodes = last_node
         self.stored_val = 0.0
         self.id = -99
+        self.uuid = str(uuid.uuid1())
+
+    def __eq__(self, other):
+        return True if self.uuid == other.uuid else False
 
     def connect(self, nodes):
         self.last_nodes = nodes
@@ -65,7 +86,7 @@ class Node:
         return self.operation(vars), self.next_node
 
     def node_def(self):
-        print(f"Variables: {self.variables}, Operation: {self.operation}, Next Node: {self.next_node}")
+        print(f"Variables: {self.variables}, Operation: {self.operation}, Next Node: {self.next_node}, UUID: {self.uuid}")
 
     def catalog(self, id):
         self.id = id
@@ -91,3 +112,5 @@ adder.connect([node1, node2])
 graph = Graph(adder)
 graph.initialize()
 print(graph.start_nodes)
+print(graph.start_id)
+print(graph.value_dict([1, 2]))
