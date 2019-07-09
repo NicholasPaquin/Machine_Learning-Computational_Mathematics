@@ -14,10 +14,10 @@ class Graph:
         self.start_id = -1
         self.end_node = end_node
         print("initialized graph")
+        self.initialize()
 
     # might get rid of forward step in favour of recursion experimenting a bit I suppose
-    def forward(self, values):
-        ind = 0
+    def forward(self, values, log=False):
         # current level of the graph being computed
         c_level = self.start_id
         # a que of all the nodes that need to be evaluated
@@ -25,12 +25,20 @@ class Graph:
         # a dictionary of uuid's and the value to be passed onto a node of a given id
         values = self.value_dict(values)
         for node in que:
+            print(que)
             if node.id == c_level:
-                val, next_node = node.forward(values[ind])
-                que.remove(node)
+                val, next_node = node.forward(values[node()])
+                print(val)
+                if not log:
+                    del(values[node()])
+                if next_node() not in values:
+                    values[next_node()] = [val]
+                else:
+                    values[next_node()].append(val)
+                # que.remove(node)
                 if next_node not in que:
                     que.append(next_node)
-            ind += 1
+            # que.remove(node)
             # finish this once I'm done node class
 
     # returns a dictionary of uuids and values to be calculated for for each node
@@ -38,7 +46,7 @@ class Graph:
         assert(len(values) == len(self.start_nodes))
         dict = {}
         for i in range(len(values)):
-            dict[self.start_nodes[i].uuid] = values[i]
+            dict[self.start_nodes[i].uuid] = [values[i]]
         return dict
 
     # defines each level of the node and finds the starting nodes from the ending node
@@ -63,6 +71,17 @@ class Graph:
         print("Indexed nodes")
 
 
+class Que:
+    def __init__(self, nodes):
+        self.que = nodes
+
+    def __getitem__(self, item):
+        return self.que[item]
+
+    # insert in order
+    def insert(self, node):
+        pass
+
 
 class Node:
     # same operation is preformed on all inputs
@@ -80,6 +99,9 @@ class Node:
     def __eq__(self, other):
         return True if self.uuid == other.uuid else False
 
+    def __call__(self, *args, **kwargs):
+        return self.uuid
+
     def eq_uuid(self, uuid):
         return True if self.uuid == uuid else False
 
@@ -89,8 +111,8 @@ class Node:
             node.next_node = self
 
     def forward(self, vars):
-        # assert (type(vars) == "list")
-        # assert(len(vars) == self.variables)
+        assert (isinstance(vars, list))
+        assert(len(vars) == self.variables)
         self.stored_val = self.operation(vars)
         return self.operation(vars), self.next_node
 
@@ -106,6 +128,7 @@ def assign(val):
 
 
 def add(vals):
+    sum = 0
     for i in vals:
         sum += i
     return sum
@@ -113,13 +136,12 @@ def add(vals):
 
 node1 = Node(1, assign)
 node1.node_def()
-node1.forward(7)
+node1.forward([7])
 node2 = Node(1, assign)
-node2.forward(7)
+node2.forward([7])
 adder = Node(2, add)
 adder.connect([node1, node2])
+print(adder.forward([7, 7]))
 graph = Graph(adder)
-graph.initialize()
-print(graph.start_nodes)
-print(graph.start_id)
-print(graph.value_dict([1, 2]))
+graph.forward([7, 7])
+
