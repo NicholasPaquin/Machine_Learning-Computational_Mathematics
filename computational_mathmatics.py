@@ -18,8 +18,12 @@ class Graph:
     # might get rid of forward step in favour of recursion experimenting a bit I suppose
     def forward(self, values):
         ind = 0
+        # current level of the graph being computed
         c_level = self.start_id
+        # a que of all the nodes that need to be evaluated
         que = self.start_nodes
+        # a dictionary of uuid's and the value to be passed onto a node of a given id
+        values = self.value_dict(values)
         for node in que:
             if node.id == c_level:
                 val, next_node = node.forward(values[ind])
@@ -29,6 +33,7 @@ class Graph:
             ind += 1
             # finish this once I'm done node class
 
+    # returns a dictionary of uuids and values to be calculated for for each node
     def value_dict(self, values):
         assert(len(values) == len(self.start_nodes))
         dict = {}
@@ -36,6 +41,7 @@ class Graph:
             dict[self.start_nodes[i].uuid] = values[i]
         return dict
 
+    # defines each level of the node and finds the starting nodes from the ending node
     def initialize(self):
         self.end_node.catalog(-1)
         next_nodes = self.end_node.last_nodes
@@ -73,6 +79,9 @@ class Node:
 
     def __eq__(self, other):
         return True if self.uuid == other.uuid else False
+
+    def eq_uuid(self, uuid):
+        return True if self.uuid == uuid else False
 
     def connect(self, nodes):
         self.last_nodes = nodes
