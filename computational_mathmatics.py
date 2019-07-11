@@ -23,17 +23,19 @@ class Graph:
         # a dictionary of uuid's and the value to be passed onto a node of a given id
         values = self.value_dict(values)
         for node in que:
-            print(node)
+            if node.id != c_level:
+                print(node.id)
+                c_level -= 1
+            print(node())
             if node.id == c_level:
                 val, next_node = node.forward(values[node()])
-                print(val)
-                if not log:
-                    del(values[node()])
+                # if not log:
+                #     del(values[node()])
                 if next_node() not in values:
-                    values[next_node()] = [val]
+                    values[next_node()] = val
                 else:
                     values[next_node()].append(val)
-                # que.remove(node)
+                print(values)
                 if next_node not in que:
                     que.insert(next_node)
             # que.remove(node)
@@ -72,7 +74,7 @@ class Graph:
         return [elem for elem in list if elem]
 
 
-class Que():
+class Que:
     def __init__(self, nodes):
         self.que = nodes
 
@@ -84,19 +86,24 @@ class Que():
             return self.que[0].__iter__()
         return self.que.__iter__()
 
+    def __len__(self):
+        return len(self.que)
+
     # insert in order
     def insert(self, node):
-        for i in range(len(self.que)):
-            if self.que[i].id < node.id:
-                self.que.insert(node, i + 1)
-                print("Inserted into que")
+        for i in range(len(self.que) - 1, 0, -1):
+            print(i)
+            if self.que[i].id > node.id:
+                self.que.insert(i, node)
                 return
 
     def remove(self, node):
         for i in range(len(self.que)):
             if self.que[i] == node:
                 self.que.pop(i)
+                print(f"Popped node {node()}")
                 return
+
 
 class Node:
     # same operation is preformed on all inputs
@@ -127,6 +134,7 @@ class Node:
 
     def forward(self, vars):
         assert (isinstance(vars, list))
+        print(vars)
         assert(len(vars) == self.variables)
         self.stored_val = self.operation(vars)
         return self.operation(vars), self.next_node
