@@ -1,9 +1,6 @@
 import copy
 import uuid
-
-
-def remove_none(list):
-    return [elem for elem in list if elem]
+from collections import Iterator
 
 
 class Graph:
@@ -21,11 +18,12 @@ class Graph:
         # current level of the graph being computed
         c_level = self.start_id
         # a que of all the nodes that need to be evaluated
-        que = self.start_nodes
+        que = Que(self.start_nodes)
+
         # a dictionary of uuid's and the value to be passed onto a node of a given id
         values = self.value_dict(values)
         for node in que:
-            print(que)
+            print(node)
             if node.id == c_level:
                 val, next_node = node.forward(values[node()])
                 print(val)
@@ -37,7 +35,7 @@ class Graph:
                     values[next_node()].append(val)
                 # que.remove(node)
                 if next_node not in que:
-                    que.append(next_node)
+                    que.insert(next_node)
             # que.remove(node)
             # finish this once I'm done node class
 
@@ -62,7 +60,7 @@ class Graph:
                 temp_next.append(nodes.last_nodes)
                 if not nodes.last_nodes:
                     self.start_nodes.append(nodes)
-            next_nodes = remove_none(temp_next)
+            next_nodes = self.clean(temp_next)
 
             if len(next_nodes) == 0:
                 self.start_id = ind
@@ -70,18 +68,35 @@ class Graph:
             ind += 1
         print("Indexed nodes")
 
+    def clean(self, list):
+        return [elem for elem in list if elem]
 
-class Que:
+
+class Que():
     def __init__(self, nodes):
         self.que = nodes
 
     def __getitem__(self, item):
         return self.que[item]
 
+    def __iter__(self):
+        if hasattr(self.que[0], "__iter__"):
+            return self.que[0].__iter__()
+        return self.que.__iter__()
+
     # insert in order
     def insert(self, node):
-        pass
+        for i in range(len(self.que)):
+            if self.que[i].id < node.id:
+                self.que.insert(node, i + 1)
+                print("Inserted into que")
+                return
 
+    def remove(self, node):
+        for i in range(len(self.que)):
+            if self.que[i] == node:
+                self.que.pop(i)
+                return
 
 class Node:
     # same operation is preformed on all inputs
