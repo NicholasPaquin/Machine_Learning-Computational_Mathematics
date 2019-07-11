@@ -24,22 +24,22 @@ class Graph:
         values = self.value_dict(values)
         for node in que:
             if node.id != c_level:
-                print(node.id)
                 c_level -= 1
-            print(node())
             if node.id == c_level:
                 val, next_node = node.forward(values[node()])
-                # if not log:
-                #     del(values[node()])
-                if next_node() not in values:
-                    values[next_node()] = val
+                if not log:
+                    del(values[node()])
+                if next_node:
+                    if next_node() not in values:
+                        values[next_node()] = val
+                    else:
+                        values[next_node()].extend(val)
+                    if next_node not in que:
+                        que.insert(next_node)
                 else:
-                    values[next_node()].append(val)
-                print(values)
-                if next_node not in que:
-                    que.insert(next_node)
+                    print(val)
+                    break
             # que.remove(node)
-            # finish this once I'm done node class
 
     # returns a dictionary of uuids and values to be calculated for for each node
     def value_dict(self, values):
@@ -91,10 +91,9 @@ class Que:
 
     # insert in order
     def insert(self, node):
-        for i in range(len(self.que) - 1, 0, -1):
-            print(i)
+        for i in range(len(self.que) - 1, -1, -1):
             if self.que[i].id > node.id:
-                self.que.insert(i, node)
+                self.que.insert(i+1, node)
                 return
 
     def remove(self, node):
@@ -158,13 +157,9 @@ def add(vals):
 
 
 node1 = Node(1, assign)
-node1.node_def()
-node1.forward([7])
 node2 = Node(1, assign)
-node2.forward([7])
 adder = Node(2, add)
 adder.connect([node1, node2])
-print(adder.forward([7, 7]))
 graph = Graph(adder)
-graph.forward([7, 7])
+graph.forward([10, 8])
 
