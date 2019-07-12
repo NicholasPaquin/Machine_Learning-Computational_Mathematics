@@ -7,4 +7,3 @@ def add(vals):
     for i in vals:
         sum += i
     return sum
-

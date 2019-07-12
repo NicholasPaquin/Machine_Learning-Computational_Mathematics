@@ -1,5 +1,6 @@
 from computational_mathmatics import Node, Graph
 
+
 class Layer:
     """
     Layer is made up of nodes, either fully connected or not.
@@ -23,10 +24,26 @@ class Layer:
         # for i in range(self.width):
         #     self.nodes.append(Node())
 
+    def connect(self, layer):
+        self.next_layer = layer
+        layer.prev_layer = self
+
 
 class Model:
     def __init__(self, layers: list):
         self.layers = layers
         self.depth = len(layers)
+        self.init_input()
+        self.init_output()
         for i in range(0, self.depth - 1):
+            self.layers[i].connect(self.layers[i+1])
+
+    def init_input(self):
+        self.layers[0].prev_layer = None
+        self.input_layer = self.layers[0]
+
+    def init_output(self):
+        self.layers[-1].next_layer = None
+        self.output_layer = self.layers[-1]
+
 
