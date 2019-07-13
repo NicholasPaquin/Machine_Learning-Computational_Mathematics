@@ -27,19 +27,21 @@ class Graph:
             if node.id != c_level:
                 c_level -= 1
             if node.id == c_level:
-                val, next_node = node.forward(values[node()])
+                val, next_nodes = node.forward(values[node()])
+                print(next_nodes)
                 if not log:
                     del(values[node()])
-                if next_node:
-                    if next_node() not in values:
-                        values[next_node()] = val
+                for next_node in next_nodes:
+                    if next_node:
+                        if next_node() not in values:
+                            values[next_node()] = val
+                        else:
+                            values[next_node()].extend(val)
+                        if next_node not in que:
+                            que.insert(next_node)
                     else:
-                        values[next_node()].extend(val)
-                    if next_node not in que:
-                        que.insert(next_node)
-                else:
-                    print(val)
-                    break
+                        print(val)
+                        return
             # que.remove(node)
 
     # returns a dictionary of uuids and values to be calculated for for each node
@@ -59,8 +61,10 @@ class Graph:
         while not cataloged:
             temp_next = []
             for nodes in next_nodes:
+                print(nodes)
                 nodes.catalog(ind)
                 temp_next.append(nodes.last_nodes)
+                # one there are no nodes after a node, iut is considered a starting node
                 if not nodes.last_nodes:
                     self.start_nodes.append(nodes)
             next_nodes = self.clean(temp_next)
@@ -109,13 +113,21 @@ class Node:
     # same operation is preformed on all inputs
     # variables is the number of inputs to take, operation is the operation to preform on inputs
     # next node is a "pointer" to the next operational node
-    def __init__(self, variables, operation, next_node=None, last_node=None):
+    def __init__(self, variables=None, operation=None, next_node=[None], last_node=None):
+        # number of variables that operations will be preformed on
         self.variables = variables
+        # operation type for node
         self.operation = operation
-        self.next_node = next_node
+        # next node/s object
+        self.next_nodes = next_node
         self.last_nodes = last_node
+        # stores previously calculated value
         self.stored_val = 0.0
+        # more for ml, stores weight for forward pass
+        self.weight = 0
+        # stores location in graph
         self.id = -99
+        # for indentifying nodes apart from eachother
         self.uuid = str(uuid.uuid1())
 
     def __eq__(self, other):
@@ -130,14 +142,14 @@ class Node:
     def connect(self, nodes):
         self.last_nodes = nodes
         for node in nodes:
-            node.next_node = self
+            node.next_nodes = self.clean(node.next_nodes)
+            node.next_nodes.append(self)
 
     def forward(self, vars):
         assert (isinstance(vars, list))
-        print(vars)
         assert(len(vars) == self.variables)
         self.stored_val = self.operation(vars)
-        return self.operation(vars), self.next_node
+        return self.operation(vars), self.next_nodes
 
     def node_def(self):
         print(f"Variables: {self.variables}, Operation: {self.operation}, Next Node: {self.next_node}, UUID: {self.uuid}")
@@ -145,11 +157,18 @@ class Node:
     def catalog(self, id):
         self.id = id
 
+    def clean(self, list):
+        return [elem for elem in list if elem]
+
 
 node1 = Node(1, assign)
 node2 = Node(1, assign)
 adder = Node(2, add)
+print(node1.next_nodes)
+print(node2.next_nodes)
 adder.connect([node1, node2])
+print(node1.next_nodes)
+print(node2.next_nodes)
 graph = Graph(adder)
 graph.forward([10, 8])
 

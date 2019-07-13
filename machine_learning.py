@@ -27,6 +27,8 @@ class Layer:
     def connect(self, layer):
         self.next_layer = layer
         layer.prev_layer = self
+        for node in self.nodes:
+            node.next_node = layer.
 
 
 class Model:
@@ -45,5 +47,7 @@ class Model:
     def init_output(self):
         self.layers[-1].next_layer = None
         self.output_layer = self.layers[-1]
+
+    def forward(self, inputs):
 
 
