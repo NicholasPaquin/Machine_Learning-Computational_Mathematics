@@ -139,6 +139,7 @@ class Node:
     def eq_uuid(self, uuid):
         return True if self.uuid == uuid else False
 
+    # connects a node to another or a set, sets current as parent to another node
     def connect(self, nodes):
         self.last_nodes = nodes
         for node in nodes:
