@@ -13,16 +13,15 @@ class Layer:
 
     def __init__(self, width, function, input_layer=False, fully_connected=True):
         self.width = width
-        self. function = function
+        self.function = function
         self.fully_connected = fully_connected
         self.nodes = []
         self.next_layer = None
         self.prev_layer = None
 
-    def initialize_layer(self):
-        pass
-        # for i in range(self.width):
-        #     self.nodes.append(Node())
+    def initialize_layer(self, variables):
+        for i in range(self.width):
+            self.nodes.append(Node(variables, self.function))
 
     def connect(self, layer):
         self.next_layer = layer
