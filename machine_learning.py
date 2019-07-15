@@ -47,7 +47,12 @@ class Model:
         self.layers[-1].next_layer = None
         self.output_layer = self.layers[-1]
 
+    # moves through each input and passes it through each node,
+    # these values are then stored and passed along to the next nodes
     def forward(self, inputs):
-        pass
+        for layer in self.layers:
+            for node in layer.nodes:
+                node.forward()  # create a bunch of graphs from the end????
+                pass
 
 
