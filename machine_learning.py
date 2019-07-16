@@ -50,9 +50,44 @@ class Model:
     # moves through each input and passes it through each node,
     # these values are then stored and passed along to the next nodes
     def forward(self, inputs):
+        c_val = Values(inputs, self.layers[0])
         for layer in self.layers:
+            n_val = Values()
             for node in layer.nodes:
-                node.forward()  # create a bunch of graphs from the end????
-                pass
+                val, next = node.forward(c_val[node.uuid])  # create a bunch of graphs from the end????
+                n_val.insert(val, next)
+            c_val.copy(n_val)
+
+
+# stores values to be processed by layers, uses dictionary and sorts by node UUID
+class Values:
+    def __init__(self, inputs=None, nodes=None):
+        assert(len(inputs) == len(nodes))
+        self.val = {}
+        if inputs and nodes:
+            for i in range(len(inputs)):
+                self.insert(inputs[i], nodes[i].uuid)
+
+    def __getitem__(self, item):
+        return self.val[item]
+
+    def __iter__(self):
+        if hasattr(self.val[0], "__iter__"):
+            return self.val[0].__iter__()
+        return self.val.__iter__()
+
+    def __len__(self):
+        return len(self.val)
+
+    def insert(self, input, node):
+        if node in self.val:
+            self.val[node].extend([input])
+        else:
+            self.val[node] = [input]
+
+    def copy(self, values):
+        self.val = values.val
+
+
 
 
