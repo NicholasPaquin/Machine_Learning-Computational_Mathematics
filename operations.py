@@ -1,12 +1,13 @@
-def assign(val):
-    return val
+class Basic:
+    def assign(val):
+        return val
 
 
-def add(vals):
-    sum = 0
-    for i in vals:
-        sum += i
-    return sum
+    def add(vals):
+        sum = 0
+        for i in vals:
+            sum += i
+        return sum
 
 
 class ActivationFunctions:

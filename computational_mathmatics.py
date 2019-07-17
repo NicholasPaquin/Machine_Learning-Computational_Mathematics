@@ -123,8 +123,6 @@ class Node:
         self.last_nodes = last_node
         # stores previously calculated value
         self.stored_val = 0.0
-        # more for ml, stores weight for forward pass
-        self.weight = 0
         # stores location in graph
         self.id = -99
         # for indentifying nodes apart from eachother
@@ -153,7 +151,7 @@ class Node:
         return self.operation(vars), self.next_nodes
 
     def node_def(self):
-        print(f"Variables: {self.variables}, Operation: {self.operation}, Next Node: {self.next_node}, UUID: {self.uuid}")
+        return f"Variables: {self.variables}, Operation: {self.operation}, Next Node: {self.next_nodes[0]}, UUID: {self.uuid}"
 
     def catalog(self, id):
         self.id = id
@@ -162,14 +160,14 @@ class Node:
         return [elem for elem in list if elem]
 
 
-node1 = Node(1, assign)
-node2 = Node(1, assign)
-adder = Node(2, add)
-print(node1.next_nodes)
-print(node2.next_nodes)
-adder.connect([node1, node2])
-print(node1.next_nodes)
-print(node2.next_nodes)
-graph = Graph(adder)
-graph.forward([10, 8])
+# node1 = Node(1, assign)
+# node2 = Node(1, assign)
+# adder = Node(2, add)
+# print(node1.next_nodes)
+# print(node2.next_nodes)
+# adder.connect([node1, node2])
+# print(node1.next_nodes)
+# print(node2.next_nodes)
+# graph = Graph(adder)
+# graph.forward([10, 8])
 
