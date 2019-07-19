@@ -1,18 +1,26 @@
 from computational_mathmatics import Node, Graph
+import numpy as np
 
 
 # special class of node, most basic machine learning node type
 class Perceptron(Node):
-    def __init__(self, bias=0):
-        super(Perceptron, self).__init__()
-        self.weights = []
+    def __init__(self, variables, bias=0):
+        super(Perceptron, self).__init__(variables)
+        self.weights = np.array([])
+        # this is depricated code using bias from now on
         # self.threshold = threshold
         self.bias = bias
-        self.evaluated
+        self.initialize_weights()
 
-    #finish reading then implement
-    def output(self):
-        return 0 if self.weights * self.evaluated + self.bias <= 0 else 1
+    def initialize_weights(self):
+        for i in range(self.variables):
+            self.weights = np.append(self.weights, np.random.randn())
+
+    # finish reading then implement
+    def function(self, inputs: np.array):
+        sum = np.dot(self.weights + self.bias, inputs)
+        return 0 if sum <= 0 else 1
+
 
 
 class Layer:
@@ -42,6 +50,8 @@ class Layer:
                 self.nodes.append(Node(variables, self.function))
         else:
             # if the user wishes to specify a type of node to use this is where it'll be done
+            for i in range(self.width):
+                self.nodes.append(self.node(variables, self.function))
             pass
 
     def connect(self, layer):

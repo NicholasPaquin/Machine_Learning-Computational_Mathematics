@@ -2,6 +2,7 @@ import copy
 import uuid
 from collections import Iterator
 from operations import *
+import numpy as np
 
 
 class Graph:
@@ -16,6 +17,7 @@ class Graph:
 
     # might get rid of forward step in favour of recursion experimenting a bit I suppose
     def forward(self, values, log=False):
+        print("Starting forward pass")
         # current level of the graph being computed
         c_level = self.start_id
         # a que of all the nodes that need to be evaluated
@@ -28,15 +30,17 @@ class Graph:
                 c_level -= 1
             if node.id == c_level:
                 val, next_nodes = node.forward(values[node()])
-                print(next_nodes)
+
                 if not log:
                     del(values[node()])
                 for next_node in next_nodes:
                     if next_node:
                         if next_node() not in values:
-                            values[next_node()] = val
+                            print("Adding new element")
+                            values[next_node()] = np.array(val)
                         else:
-                            values[next_node()].extend(val)
+                            print("adding to existing element")
+                            values[next_node()] = np.append(values[next_node()], np.array(val))
                         if next_node not in que:
                             que.insert(next_node)
                     else:
@@ -49,7 +53,7 @@ class Graph:
         assert(len(values) == len(self.start_nodes))
         dict = {}
         for i in range(len(values)):
-            dict[self.start_nodes[i].uuid] = [values[i]]
+            dict[self.start_nodes[i].uuid] = np.array(values[i])
         return dict
 
     # defines each level of the node and finds the starting nodes from the ending node
@@ -126,7 +130,7 @@ class Node:
         # stores location in graph
         self.id = -99
         # for indentifying nodes apart from eachother
-        self.uuid = str(uuid.uuid1())
+        self.uuid = str(uuid.uuid4())
 
     def __eq__(self, other):
         return True if self.uuid == other.uuid else False
@@ -144,9 +148,8 @@ class Node:
             node.next_nodes = self.clean(node.next_nodes)
             node.next_nodes.append(self)
 
-    def forward(self, vars):
-        assert (isinstance(vars, list))
-        assert(len(vars) == self.variables)
+    def forward(self, vars: np.array):
+        assert(vars.size == self.variables)
         self.stored_val = self.operation(vars)
         return self.operation(vars), self.next_nodes
 
@@ -158,16 +161,4 @@ class Node:
 
     def clean(self, list):
         return [elem for elem in list if elem]
-
-
-# node1 = Node(1, assign)
-# node2 = Node(1, assign)
-# adder = Node(2, add)
-# print(node1.next_nodes)
-# print(node2.next_nodes)
-# adder.connect([node1, node2])
-# print(node1.next_nodes)
-# print(node2.next_nodes)
-# graph = Graph(adder)
-# graph.forward([10, 8])
 

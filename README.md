@@ -5,9 +5,16 @@ I hope you enjoy.
 
 More documentations and functions to come:
 
+
 -Auto differentiation (very hard actually)
 
--Machine learning based classes (almost done)
+
+-Machine learning based classes:
+
+-Perceptron Neurons
+
+-Sigmoid Neurons
+
 
 -Automated gradient descent (ha ha you really thought)
 
