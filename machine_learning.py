@@ -13,15 +13,12 @@ class Perceptron(Node):
         self.initialize_weights()
 
     def initialize_weights(self):
-        for i in range(self.variables):
-            self.weights = np.append(self.weights, np.random.randn())
+        self.weights = np.array([np.random.randn() for i in range(self.variables)])
 
     # finish reading then implement
     def function(self, inputs: np.array):
-        # print("bias", self.bias, type(self.bias))
-        print(type(self.weights), type(inputs))
         sum = np.dot(self.weights + self.bias, inputs)
-        return 0 if sum <= 0 else 1
+        return 0 if sum <= 0 else 1, self.next_nodes
 
 
 
@@ -63,13 +60,15 @@ class Layer:
             node.connect(self.nodes)
 
     def forward(self, inputs: np.array):
-        assert(inputs.size == self.prev_layer.width)
+        if self.prev_layer:
+            assert(inputs.size == self.prev_layer.width)
+        else:
+            assert (inputs.size == self.width)
         values = np.array([])
         for node in self.nodes:
-            print(node)
             val, next_node = node.function(inputs)
+
             values = np.append(values, val)
-            print(val)
         return values
 
     def definition(self):
@@ -102,14 +101,11 @@ class Model:
 
     # moves through each input and passes it through each node,
     # these values are then stored and passed along to the next nodes
-    def forward(self, inputs):
-        c_val = Values(inputs, self.layers[0])
+    def forward(self, inputs: np.array):
+        c_val = inputs
         for layer in self.layers:
-            n_val = Values()
-            for node in layer.nodes:
-                val, next = node.forward(c_val[node.uuid])  # create a bunch of graphs from the end????
-                n_val.insert(val, next)
-            c_val.copy(n_val)
+            c_val = layer.forward(c_val)
+        print(c_val)
 
     def details(self):
         for layer in self.layers:
