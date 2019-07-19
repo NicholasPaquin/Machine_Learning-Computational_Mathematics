@@ -4,12 +4,12 @@ import numpy as np
 
 # special class of node, most basic machine learning node type
 class Perceptron(Node):
-    def __init__(self, variables, bias=0):
+    def __init__(self, variables, bias=0.1):
         super(Perceptron, self).__init__(variables)
         self.weights = np.array([])
         # this is depricated code using bias from now on
         # self.threshold = threshold
-        self.bias = bias
+        self.bias = 0
         self.initialize_weights()
 
     def initialize_weights(self):
@@ -18,6 +18,8 @@ class Perceptron(Node):
 
     # finish reading then implement
     def function(self, inputs: np.array):
+        # print("bias", self.bias, type(self.bias))
+        print(type(self.weights), type(inputs))
         sum = np.dot(self.weights + self.bias, inputs)
         return 0 if sum <= 0 else 1
 
@@ -33,7 +35,7 @@ class Layer:
     When adding the next layer to the model, connect each node based on whether it is fully connected or not.
     """
 
-    def __init__(self, width, function, node=None, input_layer=False, fully_connected=True):
+    def __init__(self, width, node=None, function=None, input_layer=False, fully_connected=True):
         self.width = width
         self.function = function
         self.fully_connected = fully_connected
@@ -60,10 +62,19 @@ class Layer:
         for node in layer.nodes:
             node.connect(self.nodes)
 
+    def forward(self, inputs: np.array):
+        assert(inputs.size == self.prev_layer.width)
+        values = np.array([])
+        for node in self.nodes:
+            print(node)
+            val, next_node = node.function(inputs)
+            values = np.append(values, val)
+            print(val)
+        return values
+
     def definition(self):
         print(f"Width: {self.width}, Function: {self.function}, Fully Connected:"
               f" {self.fully_connected}, Sample Node: {self.nodes[0].node_def()}")
-
 
 
 class Model:

@@ -117,11 +117,12 @@ class Node:
     # same operation is preformed on all inputs
     # variables is the number of inputs to take, operation is the operation to preform on inputs
     # next node is a "pointer" to the next operational node
-    def __init__(self, variables=None, operation=None, next_node=[None], last_node=None):
+    def __init__(self, variables=None, function=None, next_node=[None], last_node=None):
         # number of variables that operations will be preformed on
         self.variables = variables
         # operation type for node
-        self.operation = operation
+        if function:
+            self.function = function
         # next node/s object
         self.next_nodes = next_node
         self.last_nodes = last_node
@@ -150,11 +151,11 @@ class Node:
 
     def forward(self, vars: np.array):
         assert(vars.size == self.variables)
-        self.stored_val = self.operation(vars)
-        return self.operation(vars), self.next_nodes
+        self.stored_val = self.function(vars)
+        return self.function(vars), self.next_nodes
 
     def node_def(self):
-        return f"Variables: {self.variables}, Operation: {self.operation}, Next Node: {self.next_nodes[0]}, UUID: {self.uuid}"
+        return f"Variables: {self.variables}, Function: {self.function}, Next Node: {self.next_nodes[0]}, UUID: {self.uuid}"
 
     def catalog(self, id):
         self.id = id
