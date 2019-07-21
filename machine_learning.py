@@ -21,6 +21,24 @@ class Perceptron(Node):
         return 0 if sum <= 0 else 1, self.next_nodes
 
 
+class Sigmoid(Node):
+    def __init__(self, variables, bias=0.1):
+        super(Sigmoid, self).__init__(variables)
+        self.weights = np.array([])
+        # this is depricated code using bias from now on
+        # self.threshold = threshold
+        self.bias = 0
+        self.initialize_weights()
+
+    def initialize_weights(self):
+        self.weights = np.array([np.random.randn() for i in range(self.variables)])
+
+    # read on how sigmoid function works exactly
+    def function(self, inputs: np.array):
+        eval = 1/(1 + np.exp(-np.dot(self.weights + self.bias, inputs)))
+        return eval, self.next_nodes
+
+
 
 class Layer:
     """
