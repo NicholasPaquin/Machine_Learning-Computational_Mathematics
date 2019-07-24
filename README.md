@@ -1,4 +1,4 @@
-**Version 0.0.1**
+**Version 0.0.2**
 
 This is by Nicholas Paquin, a student at the university of waterloo in ECE
 This is a library I have built in order to establish a strong foundation in computational mathmatics and machine learning.
@@ -32,4 +32,6 @@ Auto-grad if that does ever happen...
 
 **Version History**
 * 0.0.0:
-    * Everything :(
+    * Moved from a neuron based model to a layer based model
+* 0.0.1
+    * Changed how model class is used. Made it much easier to preform back propagation.
