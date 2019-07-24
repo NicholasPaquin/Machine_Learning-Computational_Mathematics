@@ -25,6 +25,9 @@ class Perceptron(Node):
 class Sigmoid(Node):
     def __init__(self, variables):
         super(Sigmoid, self).__init__(variables)
+
+    # depricated from 0.0.0
+
         # self.weights = np.array([])
         # # this is depricated code using bias from now on
         #
@@ -56,17 +59,30 @@ class Layer:
         self.function = function
         self.fully_connected = fully_connected
         self.node = node
-        # changed from previous #
+        self.nodes = []
+        # changed from v0.0.0 #
         self.weights = np.array([])
         self.bias = np.random.randn(width)
         # last part for emphasis #
         self.next_layer = None
         self.prev_layer = None
+        self.input_layer = input_layer
 
-    def initialize_weights(self):
-        self.weights = np.array([np.random.randn() for i in range(self.variables)])
 
-    # depricated from version 0.1
+    # added in v 0.0.1
+    def initialize_weights(self, prev_nodes=None):
+        """
+        :param prev_nodes: The node that comes before is optional only if the layer is thw input layer
+        :return: This function initializes the weights for each node in a layer based on the the width of the previous
+        node or if it is the input, itself
+        """
+        if self.input_layer:
+            self.weights = np.random.randn(self.width, self.width)
+        else:
+            assert prev_nodes
+            self.weights = np.random.randn(self.width, prev_nodes)
+
+    # depricated from version 0.0.0
     # def shape(self, obj):
     #     """
     #     Python nearly defeated my design, but by a feat of laziness and frustration this is my solution.
@@ -77,7 +93,6 @@ class Layer:
     #     elif obj == "b":
     #         return tuple(self.width)
 
-
     def initialize_layer(self, variables=None):
         if not variables:
             variables = self.width
@@ -87,14 +102,14 @@ class Layer:
         else:
             # if the user wishes to specify a type of node to use this is where it'll be done
             for i in range(self.width):
-                self.nodes.append(self.node(variables, self.function))
-            pass
+                self.nodes.append(self.node(variables))
 
     def connect(self, layer):
         self.next_layer = layer
         layer.prev_layer = self
         for node in layer.nodes:
             node.connect(self.nodes)
+        layer.initialize_weights(self.width)
 
     def forward(self, inputs: np.array):
         if self.prev_layer:
@@ -102,8 +117,10 @@ class Layer:
         else:
             assert (inputs.size == self.width)
         values = np.array([])
-        for node in self.nodes:
-            val, next_node = node.function(inputs)
+        for i in range(len(self.nodes)):
+            # evaluates the node based on the node type or the function specified
+            # might have to change depending if other models require different parameters to evaluate
+            val, next_node = self.nodes[i].function(inputs, self.weights[i], self.bias[i])
 
             values = np.append(values, val)
         return values
@@ -126,6 +143,9 @@ class Model:
         self.layers[0].prev_layer = None
         self.input_layer = self.layers[0]
         self.layers[0].initialize_layer()
+        # below used to initialize the weights for itself
+        self.layers[0].input_layer = True
+        self.layers[0].initialize_weights()
 
     def init_output(self):
         self.layers[-1].next_layer = None
