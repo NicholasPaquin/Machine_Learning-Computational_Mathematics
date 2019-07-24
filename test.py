@@ -1,15 +1,13 @@
-from machine_learning import Model, Layer, Perceptron
+from machine_learning import Model, Layer, Perceptron, Sigmoid
 from operations import Basic
 import numpy as np
 
-layer1 = Layer(100, Perceptron)
-layer2 = Layer(100, Perceptron)
-layer3 = Layer(100, Perceptron)
-layer4 = Layer(30, Perceptron)
-layer5 = Layer(10, Perceptron)
-# layer1.initialize_layer(100)
-# layer2.initialize_layer(100)
-# layer3.initialize_layer(100)
+layer1 = Layer(100, Sigmoid)
+layer2 = Layer(100, Sigmoid)
+layer3 = Layer(100, Sigmoid)
+layer4 = Layer(30, Sigmoid)
+layer5 = Layer(10, Sigmoid)
+
 
 layers = [layer1, layer2, layer3, layer4, layer5]
 

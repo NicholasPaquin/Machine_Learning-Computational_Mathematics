@@ -1,4 +1,5 @@
 from computational_mathmatics import Node, Graph
+from optim import Optim
 import numpy as np
 
 
@@ -22,24 +23,24 @@ class Perceptron(Node):
 
 
 class Sigmoid(Node):
-    def __init__(self, variables, bias=0.1):
+    def __init__(self, variables):
         super(Sigmoid, self).__init__(variables)
-        self.weights = np.array([])
-        # this is depricated code using bias from now on
-        # self.threshold = threshold
-        self.bias = 0
-        self.initialize_weights()
+        # self.weights = np.array([])
+        # # this is depricated code using bias from now on
+        #
+        # self.bias = np.random.rand()
+        # self.initialize_weights()
 
-    def initialize_weights(self):
-        self.weights = np.array([np.random.randn() for i in range(self.variables)])
+    # def initialize_weights(self):
+    #     self.weights = np.array([np.random.randn() for i in range(self.variables)])
 
-    # read on how sigmoid function works exactly
+    # Overrides function method with sigmoid function
+
     def function(self, inputs: np.array):
-        eval = 1/(1 + np.exp(-np.dot(self.weights + self.bias, inputs)))
+        eval = 1/(1 + np.exp(-(np.dot(self.weights, inputs) + self.bias)))
         return eval, self.next_nodes
 
-
-
+# consider creating rather than different node types, different layer types??
 class Layer:
     """
     Layer is made up of nodes, either fully connected or not.
@@ -55,9 +56,20 @@ class Layer:
         self.function = function
         self.fully_connected = fully_connected
         self.node = node
-        self.nodes = []
+        self.bias = np.random.randn(width)
         self.next_layer = None
         self.prev_layer = None
+
+    def shape(self, obj):
+        """
+        Python nearly defeated my design, but by a feat of laziness and frustration this is my solution.
+        This function accepts "w" for the weights or "b" for the bias
+        """
+        if obj == "w":
+            return tuple(self.width, len(self.nodes[0].weights))
+        elif obj == "b":
+            return tuple(self.width)
+
 
     def initialize_layer(self, variables=None):
         if not variables:
@@ -99,6 +111,7 @@ class Model:
         self.layers = layers
         self.depth = len(layers)
         self.initialize_layers()
+        self.optim = Optim(self)
         for i in range(0, self.depth - 1):
             self.layers[i].connect(self.layers[i+1])
 
