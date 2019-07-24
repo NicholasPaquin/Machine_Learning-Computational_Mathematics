@@ -23,9 +23,9 @@ class Optim:
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
         for layer in self.model.layers:
             layer.weights = [w - (learning_rate / len(batch)) * nw
-                            for w, nw in zip(self.weights, nabla_w)]
-            self.biases = [b - (learning_rate / len(batch)) * nb
-                           for b, nb in zip(self.biases, nabla_b)]
+                            for w, nw in zip(layer.weights, nabla_w)]
+            layer.biases = [b - (learning_rate / len(batch)) * nb
+                           for b, nb in zip(layer.biases, nabla_b)]
 
     def backprop(self, x, y):
         # Your code sucks, ik :(
