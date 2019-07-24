@@ -36,8 +36,8 @@ class Sigmoid(Node):
 
     # Overrides function method with sigmoid function
 
-    def function(self, inputs: np.array):
-        eval = 1/(1 + np.exp(-(np.dot(self.weights, inputs) + self.bias)))
+    def function(self, inputs: np.array, weights, bias):
+        eval = 1/(1 + np.exp(-(np.dot(weights, inputs) + bias)))
         return eval, self.next_nodes
 
 # consider creating rather than different node types, different layer types??
@@ -56,19 +56,26 @@ class Layer:
         self.function = function
         self.fully_connected = fully_connected
         self.node = node
+        # changed from previous #
+        self.weights = np.array([])
         self.bias = np.random.randn(width)
+        # last part for emphasis #
         self.next_layer = None
         self.prev_layer = None
 
-    def shape(self, obj):
-        """
-        Python nearly defeated my design, but by a feat of laziness and frustration this is my solution.
-        This function accepts "w" for the weights or "b" for the bias
-        """
-        if obj == "w":
-            return tuple(self.width, len(self.nodes[0].weights))
-        elif obj == "b":
-            return tuple(self.width)
+    def initialize_weights(self):
+        self.weights = np.array([np.random.randn() for i in range(self.variables)])
+
+    # depricated from version 0.1
+    # def shape(self, obj):
+    #     """
+    #     Python nearly defeated my design, but by a feat of laziness and frustration this is my solution.
+    #     This function accepts "w" for the weights or "b" for the bias
+    #     """
+    #     if obj == "w":
+    #         return tuple(self.width, len(self.nodes[0].weights))
+    #     elif obj == "b":
+    #         return tuple(self.width)
 
 
     def initialize_layer(self, variables=None):
