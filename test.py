@@ -1,22 +1,23 @@
 from machine_learning import Model, Layer, Perceptron, Sigmoid
 from operations import Basic
+from optim import Optim, Cost
 import numpy as np
 
-layer1 = Layer(100, Sigmoid)
-layer2 = Layer(100, Sigmoid)
-layer3 = Layer(100, Sigmoid)
-layer4 = Layer(30, Sigmoid)
-layer5 = Layer(10, Sigmoid)
+layer1 = Layer(1, Sigmoid)
+layer2 = Layer(5, Sigmoid)
+layer3 = Layer(1, Sigmoid)
 
+layers = [layer1, layer2, layer3]
 
-layers = [layer1, layer2, layer3, layer4, layer5]
-
-model = Model(layers)
+model = Model(layers, Cost)
 model.details()
 
 # print(layer2.nodes[0].weights)
-a = np.ones(100)
-model.forward(a)
+a = np.random.rand(100, 2)
+# model.forward(a)
+
+optim = Optim(model, Cost)
+optim.SGD(a, 1, 10, 0.01)
 
 # node1 = Node(1, Basic.assign)
 # node2 = Node(1, Basic.assign)

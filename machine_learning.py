@@ -1,5 +1,5 @@
 from computational_mathmatics import Node, Graph
-from optim import Optim
+from optim import Optim, Cost
 import numpy as np
 
 
@@ -53,7 +53,22 @@ class Sigmoid(Node):
         return eval
 
     def derivative(self, z):
-        return self.activation(z)*(self.activation(z) - 1)
+        return self.activation(z)*(1 - self.activation(z))
+
+# will likely never be used
+class Input(Node):
+    def __init__(self, variables):
+        super(Input, self).__init__(variables)
+        self.type = "input"
+
+    def eval(self, inputs: np.array, weights, bias):
+        return np.dot(weights, inputs) + bias
+
+    def activation(self, z):
+        return z
+
+    def derivative(self, z):
+        return 1
 
 # consider creating rather than different node types, different layer types??
 class Layer:
@@ -66,14 +81,19 @@ class Layer:
     When adding the next layer to the model, connect each node based on whether it is fully connected or not.
     """
 
-    def __init__(self, width, node=None, function=None, input_layer=False, fully_connected=True):
+    def __init__(self, width, node=None, input_layer=False, fully_connected=True):
         self.width = width
-        self.function = function
         self.fully_connected = fully_connected
+        # if input_layer:
+        #     self.node = Input
+        # else:
         self.node = node
         self.nodes = []
         # changed from v0.0.0 #
         self.weights = np.array([])
+        # if input_layer:
+        #     self.bias = np.zeros(width)
+        # else:
         self.bias = np.random.randn(width)
         # last part for emphasis #
         self.next_layer = None
@@ -110,13 +130,9 @@ class Layer:
     def initialize_layer(self, variables=None):
         if not variables:
             variables = self.width
-        if not self.node:
-            for i in range(self.width):
-                self.nodes.append(Node(variables, self.function))
-        else:
             # if the user wishes to specify a type of node to use this is where it'll be done
-            for i in range(self.width):
-                self.nodes.append(self.node(variables))
+        for i in range(self.width):
+            self.nodes.append(self.node(variables))
 
     def connect(self, layer):
         self.next_layer = layer
@@ -125,9 +141,14 @@ class Layer:
             node.connect(self.nodes)
         layer.initialize_weights(self.width)
 
-    def forward(self, inputs: np.array):
+    def forward(self, inputs):
         if self.prev_layer:
-            assert(inputs.size == self.prev_layer.width)
+            print(type(inputs), type(type(inputs)))
+            print(inputs.size)
+            if self.prev_layer.width == 1:
+                assert(type(inputs) == int or type(inputs) == float)
+            else:
+                assert(inputs.size == self.prev_layer.width)
         else:
             assert (inputs.size == self.width)
         values = np.array([])
@@ -136,7 +157,7 @@ class Layer:
             # evaluates the node based on the node type or the function specified
             # might have to change depending if other models require different parameters to evaluate
             z = self.nodes[i].eval(inputs, self.weights[i], self.bias[i])
-            val, next_node = self.nodes[i].activation()
+            val = self.nodes[i].activation(z)
             zs = np.append(zs, z)
             values = np.append(values, val)
 
@@ -144,17 +165,16 @@ class Layer:
         return values, zs
 
     def definition(self):
-        print(f"Width: {self.width}, Function: {self.function}, Fully Connected:"
+        print(f"Width: {self.width}, Function: {self.node}, Fully Connected:"
               f" {self.fully_connected}, Sample Node: {self.nodes[0].node_def()}")
 
 
 class Model:
-    def __init__(self, layers: list):
+    def __init__(self, layers: list, cost: Cost):
         self.layers = layers
-        assert (layers[0].type == "input")
         self.depth = len(layers)
         self.initialize_layers()
-        self.optim = Optim(self)
+        self.optim = Optim(self, cost)
         for i in range(0, self.depth - 1):
             self.layers[i].connect(self.layers[i+1])
 
