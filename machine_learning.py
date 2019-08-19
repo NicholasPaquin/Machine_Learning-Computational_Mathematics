@@ -7,24 +7,30 @@ import numpy as np
 class Perceptron(Node):
     def __init__(self, variables, bias=0.1):
         super(Perceptron, self).__init__(variables)
-        self.weights = np.array([])
-        # this is depricated code using bias from now on
-        # self.threshold = threshold
-        self.bias = 0
-        self.initialize_weights()
+        self.type = "perceptron"
 
-    def initialize_weights(self):
-        self.weights = np.array([np.random.randn() for i in range(self.variables)])
+        # depricated again after moving to layer based system
 
-    # finish reading then implement
-    def function(self, inputs: np.array):
-        sum = np.dot(self.weights + self.bias, inputs)
+        # self.weights = np.array([])
+        # # this is depricated code using bias from now on
+        # # self.threshold = threshold
+        # self.bias = 0
+        # self.initialize_weights()
+
+    # def initialize_weights(self):
+    #     self.weights = np.array([np.random.randn() for i in range(self.variables)])
+
+    def eval(self, inputs: np.array, weights, bias):
+        return np.dot(weights, inputs) + bias
+
+    def activation(self, sum):
         return 0 if sum <= 0 else 1, self.next_nodes
 
 
 class Sigmoid(Node):
     def __init__(self, variables):
         super(Sigmoid, self).__init__(variables)
+        self.type = "sigmoid"
 
     # depricated from 0.0.0
 
@@ -39,9 +45,15 @@ class Sigmoid(Node):
 
     # Overrides function method with sigmoid function
 
-    def function(self, inputs: np.array, weights, bias):
-        eval = 1/(1 + np.exp(-(np.dot(weights, inputs) + bias)))
-        return eval, self.next_nodes
+    def eval(self, inputs: np.array, weights, bias):
+        return np.dot(weights, inputs) + bias
+
+    def activation(self, z):
+        eval = 1/(1 + np.exp(-z))
+        return eval
+
+    def derivative(self, z):
+        return self.activation(z)*(self.activation(z) - 1)
 
 # consider creating rather than different node types, different layer types??
 class Layer:
@@ -68,7 +80,6 @@ class Layer:
         self.prev_layer = None
         self.input_layer = input_layer
 
-
     # added in v 0.0.1
     def initialize_weights(self, prev_nodes=None):
         """
@@ -76,8 +87,11 @@ class Layer:
         :return: This function initializes the weights for each node in a layer based on the the width of the previous
         node or if it is the input, itself
         """
+        # ignore this for now, I'm going to try doing backprop on input layer too
+        # input layer will just purely take in inputs, contemplate forcing input to be a generic layer
         if self.input_layer:
             self.weights = np.random.randn(self.width, self.width)
+            # self.weights = np.ones(self.width, self.width)
         else:
             assert prev_nodes
             self.weights = np.random.randn(self.width, prev_nodes)
@@ -117,13 +131,17 @@ class Layer:
         else:
             assert (inputs.size == self.width)
         values = np.array([])
+        zs = np.array([])
         for i in range(len(self.nodes)):
             # evaluates the node based on the node type or the function specified
             # might have to change depending if other models require different parameters to evaluate
-            val, next_node = self.nodes[i].function(inputs, self.weights[i], self.bias[i])
-
+            z = self.nodes[i].eval(inputs, self.weights[i], self.bias[i])
+            val, next_node = self.nodes[i].activation()
+            zs = np.append(zs, z)
             values = np.append(values, val)
-        return values
+
+        # function return the raw calculations to avoid repetition in back propogation
+        return values, zs
 
     def definition(self):
         print(f"Width: {self.width}, Function: {self.function}, Fully Connected:"
@@ -133,6 +151,7 @@ class Layer:
 class Model:
     def __init__(self, layers: list):
         self.layers = layers
+        assert (layers[0].type == "input")
         self.depth = len(layers)
         self.initialize_layers()
         self.optim = Optim(self)
