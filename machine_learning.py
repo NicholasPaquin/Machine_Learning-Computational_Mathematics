@@ -9,17 +9,6 @@ class Perceptron(Node):
         super(Perceptron, self).__init__(variables)
         self.type = "perceptron"
 
-        # depricated again after moving to layer based system
-
-        # self.weights = np.array([])
-        # # this is depricated code using bias from now on
-        # # self.threshold = threshold
-        # self.bias = 0
-        # self.initialize_weights()
-
-    # def initialize_weights(self):
-    #     self.weights = np.array([np.random.randn() for i in range(self.variables)])
-
     def eval(self, inputs: np.array, weights, bias):
         return np.dot(weights, inputs) + bias
 
@@ -31,17 +20,6 @@ class Sigmoid(Node):
     def __init__(self, variables):
         super(Sigmoid, self).__init__(variables)
         self.type = "sigmoid"
-
-    # depricated from 0.0.0
-
-        # self.weights = np.array([])
-        # # this is depricated code using bias from now on
-        #
-        # self.bias = np.random.rand()
-        # self.initialize_weights()
-
-    # def initialize_weights(self):
-    #     self.weights = np.array([np.random.randn() for i in range(self.variables)])
 
     # Overrides function method with sigmoid function
 
@@ -110,22 +88,13 @@ class Layer:
         # ignore this for now, I'm going to try doing backprop on input layer too
         # input layer will just purely take in inputs, contemplate forcing input to be a generic layer
         if self.input_layer:
+            print("input layer")
             self.weights = np.random.randn(self.width, self.width)
             # self.weights = np.ones(self.width, self.width)
         else:
+            print("not input layer")
             assert prev_nodes
             self.weights = np.random.randn(self.width, prev_nodes)
-
-    # depricated from version 0.0.0
-    # def shape(self, obj):
-    #     """
-    #     Python nearly defeated my design, but by a feat of laziness and frustration this is my solution.
-    #     This function accepts "w" for the weights or "b" for the bias
-    #     """
-    #     if obj == "w":
-    #         return tuple(self.width, len(self.nodes[0].weights))
-    #     elif obj == "b":
-    #         return tuple(self.width)
 
     def initialize_layer(self, variables=None):
         if not variables:
@@ -143,10 +112,8 @@ class Layer:
 
     def forward(self, inputs):
         if self.prev_layer:
-            print(type(inputs), type(type(inputs)))
-            print(inputs.size)
             if self.prev_layer.width == 1:
-                assert(type(inputs) == int or type(inputs) == float)
+                pass
             else:
                 assert(inputs.size == self.prev_layer.width)
         else:
@@ -199,10 +166,14 @@ class Model:
     # moves through each input and passes it through each node,
     # these values are then stored and passed along to the next nodes
     def forward(self, inputs: np.array):
-        c_val = inputs
+        activation = inputs
+        activations = np.array([inputs])
+        zs = []
         for layer in self.layers:
-            c_val = layer.forward(c_val)
-        print(c_val)
+            activation, z = layer.forward(activation)
+            activations = np.append(activations, activation)
+            zs = np.append(zs, z)
+        return activation
 
     def details(self):
         for layer in self.layers:

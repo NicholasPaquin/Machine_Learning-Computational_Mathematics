@@ -4,20 +4,26 @@ from optim import Optim, Cost
 import numpy as np
 
 layer1 = Layer(1, Sigmoid)
-layer2 = Layer(5, Sigmoid)
-layer3 = Layer(1, Sigmoid)
+layer2 = Layer(32, Sigmoid)
+layer3 = Layer(64, Sigmoid)
+layer4 = Layer(32, Sigmoid)
+layer5 = Layer(1, Sigmoid)
 
-layers = [layer1, layer2, layer3]
+layers = [layer1, layer2, layer3, layer4, layer5]
 
 model = Model(layers, Cost)
 model.details()
 
 # print(layer2.nodes[0].weights)
-a = np.random.rand(100, 2)
+a = np.random.randn(10000, 2)
 # model.forward(a)
 
 optim = Optim(model, Cost)
-optim.SGD(a, 1, 10, 0.01)
+optim.SGD(a, 10, 10, 0.0001)
+print("----------------------")
+
+print(model.forward(a[0][0]))
+print(a[0][1])
 
 # node1 = Node(1, Basic.assign)
 # node2 = Node(1, Basic.assign)

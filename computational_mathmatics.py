@@ -117,7 +117,7 @@ class Node:
     # same operation is preformed on all inputs
     # variables is the number of inputs to take, operation is the operation to preform on inputs
     # next node is a "pointer" to the next operational node
-    def __init__(self, variables=None, function=None, next_node=[None], last_node=None):
+    def __init__(self, variables=None, function=None, next_node=[None], last_node=None, **kwargs):
         # number of variables that operations will be preformed on
         self.variables = variables
         # operation type for node
@@ -132,6 +132,14 @@ class Node:
         self.id = -99
         # for indentifying nodes apart from eachother
         self.uuid = str(uuid.uuid4())
+        specified = False
+        for key, value in kwargs:
+            if key == "type":
+                self.type = value
+                specified = True
+                break
+        if not specified:
+            self.type = "custom"
 
     def __eq__(self, other):
         return True if self.uuid == other.uuid else False
@@ -155,7 +163,7 @@ class Node:
         return self.function(vars), self.next_nodes
 
     def node_def(self):
-        return f"Variables: {self.variables}, Function: {self.function}, Next Node: {self.next_nodes[0]}, UUID: {self.uuid}"
+        return f"Variables: {self.variables}, Function: {self.type}, Next Node: {self.next_nodes[0]}, UUID: {self.uuid}"
 
     def catalog(self, id):
         self.id = id
