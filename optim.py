@@ -13,8 +13,13 @@ class Optim:
             print(f"Epoch: {i+1}/{epochs}")
             random.shuffle(train)
             mini_batches = [train[i:i+mini_batch_size] for i in range(0, n, mini_batch_size)]
+            costs = np.array([])
             for mini_batch in mini_batches:
-                self.evaluate_batch(mini_batch, learnin_rate)
+                cost = self.evaluate_batch(mini_batch, learnin_rate)
+                costs = np.append(costs, cost)
+            print(f"Average cost: {np.average(costs)}")
+
+
 
     # change everything eventually to purely matrix operations
     def evaluate_batch(self, batch, learning_rate):
@@ -23,13 +28,13 @@ class Optim:
         for x, y in batch:
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
             nabla_b = nabla_b + delta_nabla_b
-            nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-        print("Updating weights and biases")
+            nabla_w = nabla_w + delta_nabla_w
         for i in range(len(self.model.layers)):
             self.model.layers[i].weights = np.array([w - (learning_rate / len(batch)) * nw for w, nw in zip(self.model.layers[i].weights, nabla_w[i])])
             self.model.layers[i].bias = np.array([b - (learning_rate / len(batch)) * nb for b, nb in zip(self.model.layers[i].bias, nabla_b[i])])
             # layer.weights = layer.weights - (learning_rate / len(batch)) * nabla_w
             # layer.biases = layer.bias - (learning_rate / len(batch)) * nabla_b
+        return 1
 
     def backprop(self, x, y):
         # print(x)
@@ -54,7 +59,7 @@ class Optim:
             activation_prime = self.model.layers[-l].nodes[0].derivative
             z = zs[-l]
             ap = activation_prime(z)
-            delta = np.dot(delta, self.model.layers[-l + 1].weights.transpose()) * ap
+            delta = np.dot(self.model.layers[-l + 1].weights.transpose(), delta) * ap
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(activations[-l - 1], delta)
         return (nabla_b, nabla_w)
