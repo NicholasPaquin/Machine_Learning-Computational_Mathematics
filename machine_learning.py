@@ -1,55 +1,8 @@
 from computational_mathmatics import Node, Graph
-from optim import Optim, Cost
+from optim import OptimOld, Cost, Sigmoid
 import numpy as np
 
-
-# special class of node, most basic machine learning node type
-class Perceptron(Node):
-    def __init__(self, variables, bias=0.1):
-        super(Perceptron, self).__init__(variables)
-        self.type = "perceptron"
-
-    def eval(self, inputs: np.array, weights, bias):
-        return np.dot(weights, inputs) + bias
-
-    def activation(self, sum):
-        return 0 if sum <= 0 else 1, self.next_nodes
-
-
-class Sigmoid(Node):
-    def __init__(self, variables):
-        super(Sigmoid, self).__init__(variables)
-        self.type = "sigmoid"
-
-    # Overrides function method with sigmoid function
-
-    def eval(self, inputs: np.array, weights, bias):
-        return np.dot(weights, inputs) + bias
-
-    def activation(self, z):
-        eval = 1/(1 + np.exp(-z))
-        return eval
-
-    def derivative(self, z):
-        return self.activation(z)*(1 - self.activation(z))
-
-# will likely never be used
-class Input(Node):
-    def __init__(self, variables):
-        super(Input, self).__init__(variables)
-        self.type = "input"
-
-    def eval(self, inputs: np.array, weights, bias):
-        return np.dot(weights, inputs) + bias
-
-    def activation(self, z):
-        return z
-
-    def derivative(self, z):
-        return 1
-
-# consider creating rather than different node types, different layer types??
-class Layer:
+class _Layer:
     """
     Layer is made up of nodes, either fully connected or not.
     idea of operation is to go by layer and each layer will preform and store the values from each node
@@ -59,57 +12,37 @@ class Layer:
     When adding the next layer to the model, connect each node based on whether it is fully connected or not.
     """
 
-    def __init__(self, width, node=None, input_layer=False, fully_connected=True):
-        self.width = width
+    def __init__(self, input_features, output_features, input_layer=False, fully_connected=True):
+        self.output_features = output_features
         self.fully_connected = fully_connected
-        # if input_layer:
-        #     self.node = Input
-        # else:
-        self.node = node
-        self.nodes = []
         # changed from v0.0.0 #
-        self.weights = np.array([])
-        # if input_layer:
-        #     self.bias = np.zeros(width)
-        # else:
-        self.bias = np.random.randn(width)
+        self.weights = np.random.rand(output_features, input_features)
+        self.bias = np.random.randn(output_features)
         # last part for emphasis #
         self.next_layer = None
         self.prev_layer = None
         self.input_layer = input_layer
+        self.variables = 0
 
-    # added in v 0.0.1
-    def initialize_weights(self, prev_nodes=None):
-        """
-        :param prev_nodes: The node that comes before is optional only if the layer is thw input layer
-        :return: This function initializes the weights for each node in a layer based on the the width of the previous
-        node or if it is the input, itself
-        """
-        # ignore this for now, I'm going to try doing backprop on input layer too
-        # input layer will just purely take in inputs, contemplate forcing input to be a generic layer
+    def eval(self, inputs: np.array, weights, bias):
+        return inputs
+
+    def activation(self, z):
+        return z
+
+    def initialize_layer(self, variables=0):
         if self.input_layer:
-            print("input layer")
-            self.weights = np.random.randn(self.width, self.width)
-            # self.weights = np.ones(self.width, self.width)
+            self.variables = self.width
         else:
-            print("not input layer")
-            assert prev_nodes
-            self.weights = np.random.randn(self.width, prev_nodes)
-
-    def initialize_layer(self, variables=None):
-        if not variables:
-            variables = self.width
-            # if the user wishes to specify a type of node to use this is where it'll be done
-        for i in range(self.width):
-            self.nodes.append(self.node(variables))
+            self.variables = variables
+        # self.initialize_weights(self.prev_layer)
 
     def connect(self, layer):
         self.next_layer = layer
         layer.prev_layer = self
-        for node in layer.nodes:
-            node.connect(self.nodes)
         layer.initialize_weights(self.width)
 
+    # model forward, passes through entire model
     def forward(self, inputs):
         if self.prev_layer:
             if self.prev_layer.width == 1:
@@ -118,37 +51,56 @@ class Layer:
                 assert(inputs.size == self.prev_layer.width)
         else:
             assert (inputs.size == self.width)
-        values = np.array([])
-        zs = np.array([])
-        for i in range(len(self.nodes)):
-            # evaluates the node based on the node type or the function specified
-            # might have to change depending if other models require different parameters to evaluate
-            z = self.nodes[i].eval(inputs, self.weights[i], self.bias[i])
-            val = self.nodes[i].activation(z)
-            zs = np.append(zs, z)
-            values = np.append(values, val)
 
+        # testing for pure matrix algebra
+
+        # zs = self.eval(inputs, self.weights, self.bias)
+        # activations = self.activation(zs)
+
+        activations = np.array([])
+        zs = np.array([])
+        for i in range(self.width):
+            # evaluates the node based on the node type or the function specified
+            z = self.eval(inputs, self.weights[i], self.bias[i])
+            val = self.activation(z)
+            zs = np.append(zs, z)
+            activations = np.append(activations, val)
+            activations = np.squeeze(activations)
         # function return the raw calculations to avoid repetition in back propogation
-        return values, zs
+        return activations, zs
 
     def definition(self):
-        print(f"Width: {self.width}, Function: {self.node}, Fully Connected:"
-              f" {self.fully_connected}, Sample Node: {self.nodes[0].node_def()}")
+        # print(f"Width: {self.width}, Function: {self.node}, Fully Connected:"
+        #       f" {self.fully_connected}, Sample Node: {self.nodes[0].node_def()}")
+        pass
+
+
+class Linear(_Layer):
+    def eval(self, inputs: np.array, weights, bias):
+        return np.dot(weights, inputs) + bias
+
+
+class Sigmoid(Linear):
+    def activation(self, z):
+        return 1/(1 + np.exp(-z))
 
 
 class Model:
     def __init__(self, layers: list, cost: Cost):
+        print("Initialized model")
+        self.weights = []
+        self.bias = []
         self.layers = layers
         self.depth = len(layers)
         self.initialize_layers()
-        self.optim = Optim(self, cost)
+        self.optim = OptimOld(self, cost)
+        # call generate graph function
         for i in range(0, self.depth - 1):
             self.layers[i].connect(self.layers[i+1])
 
     def init_input(self):
         self.layers[0].prev_layer = None
         self.input_layer = self.layers[0]
-        self.layers[0].initialize_layer()
         # below used to initialize the weights for itself
         self.layers[0].input_layer = True
         self.layers[0].initialize_weights()
@@ -162,6 +114,9 @@ class Model:
         self.init_output()
         for i in range(1, len(self.layers), 1):
             self.layers[i].initialize_layer(self.layers[i - 1].width)
+        for layer in self.layers:
+            self.bias.append(layer.bias)
+            self.weights.append(layer.weights)
 
     # moves through each input and passes it through each node,
     # these values are then stored and passed along to the next nodes
@@ -173,6 +128,29 @@ class Model:
             activation, z = layer.forward(activation)
             activations = np.append(activations, activation)
             zs = np.append(zs, z)
+        return activations, zs
+
+    # test function will likely br gone later
+    # def feedforward(self, a):
+    #     """Return the output of the network if ``a`` is input."""
+    #     for b, w in zip(self.bias, self.weights):
+    #         a = Sigmoid().eval(np.dot(w, a)+b)
+    #     return a
+
+    def evaluate(self, test_data):
+        """Return the number of test inputs for which the neural
+        network outputs the correct result. Note that the neural
+        network's output is assumed to be the index of whichever
+        neuron in the final layer has the highest activation."""
+        test_results = [(x, np.argmax(self.predict(x)), y)
+                        for (x, y) in test_data]
+        print(test_results)
+        return sum(int(x == y) for (z, x, y) in test_results)
+
+    def predict(self, inputs: np.array):
+        activation = inputs
+        for layer in self.layers:
+            activation, z = layer.forward(activation)
         return activation
 
     def details(self):
