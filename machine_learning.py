@@ -1,6 +1,7 @@
 from computational_mathmatics import Node, Graph
-from optim import OptimOld, Cost, Sigmoid
+from optim import OptimOld, Cost
 import numpy as np
+from base import ModelParameters
 
 class _Layer:
     """
@@ -30,17 +31,9 @@ class _Layer:
     def activation(self, z):
         return z
 
-    def initialize_layer(self, variables=0):
-        if self.input_layer:
-            self.variables = self.width
-        else:
-            self.variables = variables
-        # self.initialize_weights(self.prev_layer)
-
     def connect(self, layer):
         self.next_layer = layer
         layer.prev_layer = self
-        layer.initialize_weights(self.width)
 
     # model forward, passes through entire model
     def forward(self, inputs):
@@ -97,6 +90,7 @@ class Model:
         # call generate graph function
         for i in range(0, self.depth - 1):
             self.layers[i].connect(self.layers[i+1])
+        self.parameters = ModelParameters(self)
 
     def init_input(self):
         self.layers[0].prev_layer = None

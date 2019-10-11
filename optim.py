@@ -148,38 +148,37 @@ class SGD:
 
 
 class Cost:
-    def __init__(self):
-        self.type = "default"
-
-    def eval(self, predicted, expected):
+    @staticmethod
+    def eval(predicted, expected):
         pass
 
-    def derivative(self, predicted, expected):
+    @staticmethod
+    def derivative(predicted, expected):
         return predicted - expected
 
 
 class LogLoss(Cost):
-    def eval(self, predicted, expected):
+    @staticmethod
+    def eval(predicted, expected):
         if expected == 1.0:
             return -np.log(predicted)
         elif expected == 0.0:
             return -np.log(1-predicted)
 
-    def derivative(self, predicted, expected):
+    @staticmethod
+    def derivative(predicted, expected):
         if expected == 1.0:
             return -1/predicted
         elif expected == 0.0:
             return 1/(1 - predicted)
 
 
-
 class Sigmoid:
-    def __init__(self):
-        pass
-
-    def eval(self, z):
+    @staticmethod
+    def eval(z):
         return 1 / (1 + np.exp(-z))
 
-    def derivative(self, z):
-        return self.eval(z) * (1 - self.eval(z))
+    @staticmethod
+    def derivative(z):
+        return Sigmoid.eval(z) * (1 - Sigmoid.eval(z))
 
