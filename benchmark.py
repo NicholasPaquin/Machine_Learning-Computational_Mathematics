@@ -85,8 +85,7 @@ class Network(object):
             activation = sigmoid(z)
             activations.append(activation)
         # backward pass
-        delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
+        delta = self.cost_derivative(activations[-1], y)
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -101,6 +100,12 @@ class Network(object):
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+            if l == 3:
+                print('delta: ', delta)
+                print('weights: ', self.weights[-l + 1].T)
+                print("shape: ", self.weights[-l + 1].T.shape)
+                print('sp: ', sp.shape)
+                print('activation: ', activations[-l - 1].T)
         return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):
@@ -110,16 +115,13 @@ class Network(object):
         neuron in the final layer has the highest activation."""
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
-        print(test_results)
+        # print(test_results)
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
         \partial a for the output activations."""
-        if y:
-            return -1 / output_activations
-        else:
-            return 1 / (1 - output_activations)
+        return output_activations - y
 
 #### Miscellaneous functions
 def sigmoid(z):
