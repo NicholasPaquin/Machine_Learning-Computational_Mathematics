@@ -11,12 +11,9 @@ class Activation:
         return z
 
 
-class sigmoid(Activation):
-    @staticmethod
-    def __call__(z):
-        return 1 / (1 + np.exp(-z))
+def sigmoid(z):
+    return 1.0 / (1.0 + np.exp(-z))
 
-    @staticmethod
-    def derivative(z):
-        eval = sigmoid()
-        return eval(z) * (1 - eval(z))
+
+def sigmoid_derivative(z):
+    return sigmoid(z) * (1 - sigmoid(z))

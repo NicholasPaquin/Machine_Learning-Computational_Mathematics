@@ -86,6 +86,7 @@ class Network(object):
             activations.append(activation)
         # backward pass
         delta = self.cost_derivative(activations[-1], y)
+        print("original delta: ", delta)
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -95,17 +96,18 @@ class Network(object):
         # scheme in the book, used here to take advantage of the fact
         # that Python can use negative indices in lists.
         for l in range(2, self.num_layers):
+            print("num_layers: ", self.num_layers)
             z = zs[-l]
             sp = sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
-            if l == 3:
-                print('delta: ', delta)
-                print('weights: ', self.weights[-l + 1].T)
-                print("shape: ", self.weights[-l + 1].T.shape)
-                print('sp: ', sp.shape)
-                print('activation: ', activations[-l - 1].T)
+            print('z: ', z)
+            print('delta: ', delta)
+            print('weights: ', self.weights[-l + 1].T)
+            print("shape: ", self.weights[-l + 1].T.shape)
+            print('sp: ', sp)
+            print('activation: ', activations[-l - 1].T)
         return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):

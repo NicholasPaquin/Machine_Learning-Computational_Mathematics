@@ -1,6 +1,6 @@
 import numpy as np
 import random
-from activations import sigmoid
+from activations import sigmoid, sigmoid_derivative
 
 
 class SGD:
@@ -55,27 +55,27 @@ class SGD:
         for b, w in zip(self.model.bias, self.model.weights):
             z = np.dot(w, activation) + b
             zs.append(z)
-            activation = sigmoid()(z)
+            activation = sigmoid(z)
             activations.append(activation)
         cost = self.cost.eval(activations[-1], y)
         delta = self.cost.derivative(activations[-1], y, zs[-1])
         nabla_b[-1] = delta
+        print("original delta: ", delta)
         nabla_w[-1] = np.dot(delta, activations[-2].T)
         for l in range(2, self.model.depth + 1):
+            print("depth: ",  self.model.depth + 1)
             z = zs[-l]
-            sp = sigmoid.derivative(z)
-            if l == 3:
-                print('np.dot(self.model.weights[-l + 1].T, delta): ', np.dot(self.model.weights[-l + 1].T, delta))
-                print('what is should be: ', self.model.weights[-l + 1].T * activations[-l - 1] * sp)
+            sp = sigmoid_derivative(z)
             delta = np.dot(self.model.weights[-l + 1].T, delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l - 1].T)
-            if l == 3:
-                print('delta: ', delta)
-                print('weights: ', self.model.weights[-l + 1].T)
-                print('weights shape: ', self.model.weights[-l + 1].T.shape)
-                print('sp: ', sp.shape)
-                print('activation: ', activations[-l - 1].T)
+            print(l)
+            print('z: ', z)
+            print('delta: ', delta)
+            print('weights: ', self.model.weights[-l + 1].T)
+            print('weights shape: ', self.model.weights[-l + 1].T.shape)
+            print('sp: ', sp)
+            print('activation: ', activations[-l - 1].T)
         return nabla_b, nabla_w, cost
 
 

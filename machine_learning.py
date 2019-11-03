@@ -2,7 +2,7 @@ from generate_graph import NNGraph
 from optim import Cost
 import numpy as np
 from base import ModelParameters
-from activations import sigmoid
+from activations import sigmoid, sigmoid_derivative
 
 
 class Model:
@@ -47,7 +47,7 @@ class Model:
         zs = []
         for b, w in zip(self.bias, self.weights):
             z = np.dot(w, activation)+b
-            activation = sigmoid()(z)
+            activation = sigmoid(z)
             activations.append(activation)
             zs.append(z)
 
@@ -76,7 +76,7 @@ class Model:
             z = np.dot(w, activation) + b
             if test:
                 print(z)
-            activation = sigmoid()(z)
+            activation = sigmoid(z)
             if test:
                 print(activation)
                 print(f"activation check: {not z == activation}")
