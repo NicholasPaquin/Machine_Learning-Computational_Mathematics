@@ -1,4 +1,5 @@
 import numpy as np
+from activations import _Sigmoid, Activation
 
 
 class _Layer:
@@ -18,12 +19,10 @@ class _Layer:
         self.prev_layer = None
         self.input_layer = input_layer
         self.variables = 0
+        self.activation = Activation()
 
     def eval(self, inputs: np.array, weights, bias):
         return inputs
-
-    def activation(self, z):
-        return z
 
     def connect(self, layer):
         self.next_layer = layer
@@ -62,12 +61,13 @@ class Linear(_Layer):
 
 
 class Sigmoid(Linear):
-    def activation(self, z):
-        return 1/(1 + np.exp(-z))
+    def __init__(self, in_features, out_features):
+        super().__init__(in_features, out_features)
+        self.activation = _Sigmoid()
 
 
 class Conv2D(_Layer):
-    def __init__(self, in_features, out_features, kernel_size, type='max', stride=1, padding=0, dilation=1):
+    def __init__(self, in_features, out_features, kernel_size, stride=1, padding=0, dilation=1):
         super().__init__(in_features, out_features)
         self.kernel_size = kernel_size
         self.stride = stride
