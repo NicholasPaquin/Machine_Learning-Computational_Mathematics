@@ -11,7 +11,7 @@ class _Layer:
         self.out_features = out_features
         self.fully_connected = fully_connected
         # changed from v0.0.0 #
-        self.weights = np.random.rand(out_features, in_features)
+        self.weights = np.random.randn(out_features, in_features)
         self.bias = np.random.randn(out_features)
         # last part for emphasis #
         self.next_layer = None

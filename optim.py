@@ -60,22 +60,13 @@ class SGD:
         cost = self.cost.eval(activations[-1], y)
         delta = self.cost.derivative(activations[-1], y, zs[-1])
         nabla_b[-1] = delta
-        print("original delta: ", delta)
         nabla_w[-1] = np.dot(delta, activations[-2].T)
         for l in range(2, self.model.depth + 1):
-            print("depth: ",  self.model.depth + 1)
             z = zs[-l]
             sp = sigmoid_derivative(z)
             delta = np.dot(self.model.weights[-l + 1].T, delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l - 1].T)
-            print(l)
-            print('z: ', z)
-            print('delta: ', delta)
-            print('weights: ', self.model.weights[-l + 1].T)
-            print('weights shape: ', self.model.weights[-l + 1].T.shape)
-            print('sp: ', sp)
-            print('activation: ', activations[-l - 1].T)
         return nabla_b, nabla_w, cost
 
 
@@ -124,3 +115,7 @@ class CrossEntropy:
     def derivative(a, y, z):
         # print(len(z))
         return a - y
+
+class _Regularizer:
+    def __init__(self, cost):
+        self.cost = cost
