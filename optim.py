@@ -4,10 +4,11 @@ from activations import sigmoid, sigmoid_derivative
 
 
 class SGD:
-    def __init__(self, model, cost):
+    def __init__(self, model, cost, regularizer=None, gamma=1):
         self.model = model
-        self.cost = cost()
+        self.cost = cost(regularizer, gamma)
         self.log = []
+        self.bpcost = BackpropCost(regularizer, gamma)
 
     def SGD(self, train, epochs, mini_batch_size, learnin_rate, validation=None):
         if len(validation) != 0:
@@ -57,14 +58,14 @@ class SGD:
             zs.append(z)
             activation = sigmoid(z)
             activations.append(activation)
-        cost = self.cost.eval(activations[-1], y)
-        delta = self.cost.derivative(activations[-1], y, zs[-1])
-        nabla_b[-1] = delta
-        nabla_w[-1] = np.dot(delta, activations[-2].T)
+        cost = self.cost.eval(activations[-1], y, self.model.weights)
+        # delta = self.cost.derivative(activations[-1], y, zs[-1])
+        nabla_b[-1] = delta = self.cost.delta_b(activations[-1], y, self.model.weights)
+        nabla_w[-1] = self.cost.delta_w(activations[-1], activations[-2], y, self.model.weights)
         for l in range(2, self.model.depth + 1):
             z = zs[-l]
             sp = sigmoid_derivative(z)
-            delta = np.dot(self.model.weights[-l + 1].T, delta) * sp
+            # delta = np.dot(self.model.weights[-l + 1].T, delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l - 1].T)
         return nabla_b, nabla_w, cost
@@ -91,15 +92,21 @@ class Quadratic:
 
 
 class LogLoss:
-    @staticmethod
-    def eval(predicted, expected):
+    def __init__(self, regularizer, gamma=1):
+        self.gamma = gamma
+        if regularizer == None:
+            self.eval = self._eval
+            self.derivative = self._derivative
+        elif regularizer == 'l2':
+            pass
+
+    def _eval(self, predicted, expected, weights):
         if expected == 1.0:
             return -np.log(predicted)
         elif expected == 0.0:
             return -np.log(1 - predicted)
 
-    @staticmethod
-    def derivative(predicted, expected, z):
+    def _derivative(self, predicted, expected, weights):
         if expected == 1.0:
             return -1 / predicted[1]
         elif expected == 0.0:
@@ -107,15 +114,78 @@ class LogLoss:
 
 
 class CrossEntropy:
-    @staticmethod
-    def eval(a, y):
+    def __init__(self, regularizer=None, gamma=1):
+        self.gamma = gamma
+        if regularizer == None:
+            self.eval = self._eval
+            self.delta_w = self._delta_w
+            self.delta_b = self._delta_b
+        elif regularizer == 'l2':
+            self.reg = L2()
+            self.eval = self._eval_reg
+            self.delta_w = self._delta_w_reg
+            self.delta_b = self._delta_b_reg
+        else:
+            raise ValueError(f'{regularizer} is not a supported regularizer')
+
+    def _eval(self, a, y, weights):
         return np.sum(np.nan_to_num(-y*np.log(a)-(1-y)*np.log(1-a)))
 
-    @staticmethod
-    def derivative(a, y, z):
+    def _delta_w(self, a, a_2, y, weights):
+        # print(len(z))
+        return np.dot(a - y, a_2.T)
+
+    def _delta_b(self, a, y, weights):
         # print(len(z))
         return a - y
 
-class _Regularizer:
-    def __init__(self, cost):
-        self.cost = cost
+    def _eval_reg(self, a, y, weights):
+        return self._eval(a, y, weights) + self.reg.eval(self.gamma, len(y), weights)
+
+    def _delta_w_reg(self, a, a_2, y, weights):
+        # print(len(z))
+        return self._delta_w(a, a_2, y, weights) + self.reg.delta_w(self.gamma, len(y), weights)
+
+    def _delta_b_reg(self, a, y, weights):
+        # print(len(z))
+        return self._delta_b(a, y, weights) + self.reg.delta_b(self.gamma, len(y), weights)
+
+
+class L2:
+    def eval(self, gamma, n, weights):
+        return gamma/n * np.sum(np.square(weights))
+
+    def delta_w(self, gamma, n, weights):
+        return gamma/n * weights
+
+    def delta_b(self, gamma, n, weights):
+        return 0
+
+
+class BackpropCost:
+    def __init__(self, regularizer=None, gamma=1):
+        self.gamma = gamma
+        if regularizer == None:
+            self.delta_w = self._delta_w
+            self.delta_b = self._delta_b
+        elif regularizer == 'l2':
+            self.reg = L2()
+            self.delta_w = self._delta_w_reg
+            self.delta_b = self._delta_b_reg
+        else:
+            raise ValueError(f'{regularizer} is not a supported regularizer')
+
+    def _delta_w(self, a, delta_b, weights):
+        # print(len(z))
+        return np.dot(delta_b, a.T)
+
+    def _delta_b(self, weights, delta, ap):
+        return np.dot(weights.T, delta) * ap
+
+    def _delta_w_reg(self, a, delta_b, weights, weights_whole):
+        # print(len(z))
+        return self._delta_w(a, delta_b, weights) + self.reg.delta_w(self.gamma, len(a), weights_whole)
+
+    def _delta_b_reg(self, weights, delta, ap, weights_whole):
+        # print(len(z))
+        return self._delta_b(weights, delta, ap) + self.reg.delta_b(self.gamma, len(ap), weights)
