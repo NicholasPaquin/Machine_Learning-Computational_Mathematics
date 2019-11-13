@@ -6,14 +6,14 @@ from activations import sigmoid, sigmoid_derivative
 
 
 class Model:
-    def __init__(self, layers: list, cost: Cost, optim):
+    def __init__(self, layers: list, cost: Cost, optim, regularizer=None, gamma=0):
         print("Initialized model")
         self.weights = []
         self.bias = []
         self.layers = layers
         self.depth = len(layers)
         self.initialize_layers()
-        self._optim = optim(self, cost)
+        self._optim = optim(self, cost, regularizer, gamma)
         self.input_layer = None
         self.output_layer = None
         # call generate graph function
