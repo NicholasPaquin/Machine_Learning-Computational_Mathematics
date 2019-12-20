@@ -1,12 +1,13 @@
-from generate_graph import NNGraph
+from generate_graph import NNGraphForward, NNGraphBackward
 from optim import Cost
 import numpy as np
 from base import ModelParameters
 from activations import sigmoid, sigmoid_derivative
+from dropout import Dropout
 
 
 class Model:
-    def __init__(self, layers: list, cost: Cost, optim, regularizer=None, gamma=0):
+    def __init__(self, layers: list, cost: Cost, optim, regularizer=None, gamma=0, dropout=None):
         print("Initialized model")
         self.weights = []
         self.bias = []
@@ -20,7 +21,12 @@ class Model:
         for i in range(0, self.depth - 1):
             self.layers[i].connect(self.layers[i+1])
         self._parameters = ModelParameters(self)
-        self._graph = NNGraph(self)
+        self._forward_graph = NNGraphForward(self)
+        self._backward_graph = NNGraphBackward(self)
+        if dropout:
+            self.dropout = Dropout(self, dropout)
+        else:
+            self.dropout = None
 
     def init_input(self):
         self.layers[0].prev_layer = None
@@ -41,47 +47,17 @@ class Model:
 
     # moves through each input and passes it through each node,
     # these values are then stored and passed along to the next nodes
-    def forward(self, inputs: np.array):
-        activation = inputs
-        activations = [inputs]
-        zs = []
-        for b, w in zip(self.bias, self.weights):
-            z = np.dot(w, activation)+b
-            activation = sigmoid(z)
-            activations.append(activation)
-            zs.append(z)
-
-        return activations, zs
-
-    # # test function will likely br gone later
-    # def feedforward(self, a):
-    #     """Return the output of the network if ``a`` is input."""
-    #     for b, w in zip(self.bias, self.weights):
-    #         a = Sigmoid()(np.dot(w, a)+b)
-    #     return a
+    def forward(self, x):
+        return self._forward_graph.forward(x)
 
     def evaluate(self, test_data):
-        """Return the number of test inputs for which the neural
-        network outputs the correct result. Note that the neural
-        network's output is assumed to be the index of whichever
-        neuron in the final layer has the highest activation."""
-        test_results = [(x, np.argmax(self.predict(x, False)), y)
+        test_results = [(x, np.argmax(self.predict(x)), y)
                         for (x, y) in test_data]
         # print(test_results)
         return sum(int(x == y) for (z, x, y) in test_results)
 
-    def predict(self, inputs: np.array, test):
-        activation = inputs
-        for b, w in zip(self.bias, self.weights):
-            z = np.dot(w, activation) + b
-            if test:
-                print(z)
-            activation = sigmoid(z)
-            if test:
-                print(activation)
-                print(f"activation check: {not z == activation}")
-        # print(activation)
-        return activation
+    def predict(self, x):
+       return self._forward_graph.predict(x)
 
     def parameters(self):
         print('----------Model Parameters----------')

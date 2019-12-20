@@ -25,3 +25,6 @@ def sigmoid(z):
 
 def sigmoid_derivative(z):
     return sigmoid(z) * (1 - sigmoid(z))
+
+def softmax(x):
+    return np.exp(x) / sum(np.exp(x))

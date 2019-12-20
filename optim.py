@@ -10,11 +10,13 @@ class SGD:
         self.log = []
         self.bpcost = BackpropCost(regularizer, gamma)
 
-    def SGD(self, train, epochs, mini_batch_size, learnin_rate, validation=None):
+    def optim(self, train, epochs, mini_batch_size, learnin_rate, validation=None):
         if len(validation) != 0:
             n_test = len(validation)
         n = len(train)
         for epoch in range(epochs):
+            if self.model.dropout:
+                self.model.dropout()
             costs = []
             np.random.shuffle(train)
             mini_batches = [train[i:i + mini_batch_size] for i in range(0, n, mini_batch_size)]
@@ -32,16 +34,20 @@ class SGD:
         nabla_w = [np.zeros(w.shape) for w in self.model.weights]
         costs = []
         for x, y in batch:
-            delta_nabla_b, delta_nabla_w, cost = self.backprop(x, y, n)
-            # print("nable_b")
-            # print('len: ', len(delta_nabla_b))
-            # print(delta_nabla_b)
-            # print("nable_w")
-            # print('len: ', len(delta_nabla_w))
-            # print(delta_nabla_w)
+            delta_nabla_b, delta_nabla_w, cost = self.model._backward_graph.backprop(x, y, n, self.cost, self.bpcost)
             costs.append(cost)
             nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+        if self.model.dropout:
+            for index, nb in enumerate(nabla_b):
+                if index != self.model.depth - 1:
+                    for drop in self.model.dropout.dropout[index]:
+                        nb[drop] = 0
+            for index, nw in enumerate(nabla_w):
+                if index != self.model.depth - 1:
+                    for drop in self.model.dropout.dropout[index]:
+                        nw[drop] = np.zeros(nw[drop].shape)
+
         self.model.weights = [w - (lr / len(batch)) * nw for w, nw in zip(self.model.weights, nabla_w)]
         self.model.bias = [b - (lr / len(batch)) * nb for b, nb in zip(self.model.bias, nabla_b)]
         return np.average(np.array(costs))
@@ -53,11 +59,28 @@ class SGD:
         activation = x
         activations = [x]  # list to store all the activations, layer by layer
         zs = []  # list to store all the z vectors, layer by layer
+        layer = 0
         for b, w in zip(self.model.bias, self.model.weights):
+            if layer != self.model.depth - 1 and self.model.dropout:
+                try:
+                    for drop in self.model.dropout.dropout[layer]:
+                        try:
+                            w[drop] = np.zeros(w[drop].shape)
+                            b[drop] = 0
+                        except Exception as e:
+                            print(e)
+                            print(drop)
+                            print(layer)
+                            print(self.model.dropout.dropout)
+                except Exception as e:
+                    print(e)
+                    print(layer)
+                    print(self.model.dropout.dropout)
             z = np.dot(w, activation) + b
             zs.append(z)
             activation = sigmoid(z)
             activations.append(activation)
+            layer += 1
         cost = self.cost.eval(activations[-1], y, self.model.weights, n)
         # delta = self.cost.derivative(activations[-1], y, zs[-1])
         nabla_b[-1] = delta = self.cost.delta_b(activations[-1], y, self.model.weights[-1], n)
@@ -136,27 +159,27 @@ class CrossEntropy:
         else:
             raise ValueError(f'{regularizer} is not a supported regularizer')
 
-    def _eval(self, a, y, weights):
+    def _eval(self, a, y, weights, n):
         return np.sum(np.nan_to_num(-y*np.log(a)-(1-y)*np.log(1-a)))
 
-    def _delta_w(self, a, a_2, y, weights):
+    def _delta_w(self, a, a_2, y, weights, n):
         # print(len(z))
         return np.dot(a - y, a_2.T)
 
-    def _delta_b(self, a, y, weights):
+    def _delta_b(self, a, y, weights, n):
         # print(len(z))
         return a - y
 
     def _eval_reg(self, a, y, weights, n):
-        return self._eval(a, y, weights) + self.reg.eval(self.gamma, n, weights)
+        return self._eval(a, y, weights, n) + self.reg.eval(self.gamma, n, weights)
 
     def _delta_w_reg(self, a, a_2, y, weights, n):
         # print(len(z))
-        return self._delta_w(a, a_2, y, weights) + self.reg.delta_w(self.gamma, n, weights)
+        return self._delta_w(a, a_2, y, weights, n) + self.reg.delta_w(self.gamma, n, weights)
 
     def _delta_b_reg(self, a, y, weights, n):
         # print(len(z))
-        return self._delta_b(a, y, weights) + self.reg.delta_b(self.gamma, n, weights)
+        return self._delta_b(a, y, weights, n) + self.reg.delta_b(self.gamma, n, weights)
 
 
 class L2:
@@ -218,10 +241,3 @@ class BackpropCost:
     def _delta_b_reg(self, weights, delta, ap, weights_whole, n):
         # print(len(z))
         return self._delta_b(weights, delta, ap, None, n) + self.reg.delta_b(self.gamma, n, weights)
-
-class Dropout:
-    def __init__(self, model, dropout):
-        self.model = model
-        self.dropout = dropout
-
-    def 
